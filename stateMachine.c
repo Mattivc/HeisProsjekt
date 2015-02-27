@@ -12,7 +12,7 @@ typedef enum state {
 } state;
 
 state currentState;
-int lastFloor = -1;
+static int lastFloor = -1;
 
 void sm_init() {
 	currentState = INITIALIZE;
@@ -28,6 +28,7 @@ void newOrder(int floor, order_direction dir) {
 		case INITIALIZE:
 			break;
 		case IDLE:
+		{
 			int relative_dir = floor - lastFloor;
 			if (relative_dir < 0) {
 				elev_set_motor_direction(DIRN_DOWN);
@@ -38,6 +39,7 @@ void newOrder(int floor, order_direction dir) {
 			} else {
 
 			}
+		}
 		case MOVING:
 		case STOP:
 		case AT_FLOOR:
