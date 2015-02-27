@@ -1,3 +1,4 @@
+#include "enums.h"
 
 int orderArray[2][3] = {{0}};
 
@@ -44,5 +45,9 @@ void clearOrder(int floor, order_direction dir) {
 }
 
 void clearAllOrders() {
-
+	for (int i = 0; i < 2; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			orderArray[i][j] = 0;
+		}
+	}
 }

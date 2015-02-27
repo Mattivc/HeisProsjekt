@@ -1,7 +1,7 @@
-
-
-
 #include "stateMachine.h"
+#include "queue.h"
+#include "elev.h"
+#include <stdio.h>
 
 typedef enum state {
 	INITIALIZE,
@@ -9,12 +9,18 @@ typedef enum state {
 	MOVING,
 	STOP,
 	AT_FLOOR
-} state
+} state;
 
 state currentState;
+int lastFloor = -1;
 
-void initialize() {
-
+void sm_init() {
+	currentState = INITIALIZE;
+	if (elev_get_floor_sensor_signal() == 0) {
+		currentState = IDLE;
+	} else {
+		elev_set_motor_direction(DIRN_DOWN);
+	}
 }
 
 void newOrder(int floor, order_direction dir) {
@@ -22,19 +28,32 @@ void newOrder(int floor, order_direction dir) {
 		case INITIALIZE:
 			break;
 		case IDLE:
-			break;
+			int relative_dir = floor - lastFloor;
+			if (relative_dir < 0) {
+				elev_set_motor_direction(DIRN_DOWN);
+				currentState = MOVING;
+			} else if (relative_dir > 0) {
+				elev_set_motor_direction(DIRN_UP);
+				currentState = MOVING;
+			} else {
+
+			}
 		case MOVING:
-			break;
 		case STOP:
-			break;
 		case AT_FLOOR:
-			break;
+			addOrder(floor, dir);
 	}
 }
 
 void arrivedAtFloor(int floor) {
+	printf("Arrived at floor %i\n", floor);
+	lastFloor = floor;
 	switch (currentState) {
 		case INITIALIZE:
+			if (floor == 0) {
+				elev_set_motor_direction(DIRN_STOP);
+				currentState = IDLE;
+			}
 			break;
 		case IDLE:
 			break;

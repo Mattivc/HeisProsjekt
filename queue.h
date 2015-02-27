@@ -1,12 +1,9 @@
-
 #ifndef __INCLUDE_QUEUE_H__
 #define __INCLUDE_QUEUE_H__
 
-typedef enum order_direction {
-	DIR_DOWN,
-	DIR_UP,
-	DIR_BOTH
-} order_direction
+//#include "enums.h"
+
+enum order_direction;
 
 void addOrder(int floor, order_direction dir);
 

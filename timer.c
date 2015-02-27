@@ -1,22 +1,25 @@
-#include "channels.h"
-#include "elev.h"
-#include "io.h"
-#include "timer.h"
-
-#include <assert.h>
-#include <stdlib.h>
+#include <time.h>
+#include <stdio.h>
 
 time_t startTime;
 time_t currentTime;
 
-void startDoorTimer (void) {
-	startTime = time( NULL );
+int isSet = 0;
+
+void startDoorTimer() {
+	startTime = time(0);
+	isSet = 1;
 }
-bool isDoorTimerDone (void) {
-	currentTime = time ( NULL );
-	return difftime ( startTime + 3 ) >= currentTime;
+
+int isDoorTimerDone() {
+	if (isSet == 0) {
+		return 0;
+	} else {
+		currentTime = time(0);
+		return currentTime - startTime > 3;	
+	}
 }
-void resetDoorTimer (void) {
-	startTime = NULL;
-	currentTime = NULL;
+
+void resetDoorTimer() {
+	isSet = 0;
 }

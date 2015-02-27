@@ -2,9 +2,13 @@
 #ifndef __INCLUDE_STATE_MACHINE_H__
 #define __INCLUDE_STATE_MACHINE_H__
 
-void initialize();
+#include "enums.h"
 
-void newOrder(int floor, order_direction dir);
+void sm_init();
+
+enum order_direction;
+
+void newOrder(int floor, enum order_direction dir);
 
 void arrivedAtFloor(int floor);
 
