@@ -1,6 +1,8 @@
 #include <time.h>
 #include <stdio.h>
 
+#define time_length 3
+
 time_t startTime;
 time_t currentTime;
 
@@ -16,7 +18,7 @@ int isDoorTimerDone() {
 		return 0;
 	} else {
 		currentTime = time(0);
-		return currentTime - startTime > 3;	
+		return currentTime - startTime > time_length;	
 	}
 }
 

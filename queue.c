@@ -5,13 +5,13 @@ int orderArray[2][3] = {{0}};
 
 void addOrder(int floor, order_direction dir) {
 	switch (dir) {
-		case DIR_DOWN:
+		case ORDER_DIR_DOWN:
 			orderArray[0][floor-2] = 1;
 			break;
-		case DIR_UP:
+		case ORDER_DIR_UP:
 			orderArray[1][floor-1] = 1;
 			break;
-		case DIR_BOTH:
+		case ORDER_DIR_BOTH:
 			orderArray[0][floor-2] = 1;
 			orderArray[1][floor-1] = 1;
 			break;
@@ -20,24 +20,42 @@ void addOrder(int floor, order_direction dir) {
 
 int hasOrder(int floor, order_direction dir) {
 	switch (dir) {
-		case DIR_DOWN:
+		case ORDER_DIR_DOWN:
 			return orderArray[0][floor-2];
-		case DIR_UP:
+		case ORDER_DIR_UP:
 			return orderArray[1][floor-1];
-		case DIR_BOTH:
+		case ORDER_DIR_BOTH:
 			return orderArray[0][floor-2] + orderArray[1][floor-1];
 	}
 }
 
+int hasOrderAbove(int floor, order_direction dir) {
+	for (int i = floor+1; i < 4; ++i) {
+		if (hasOrder(floor, (int)dir)) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+int hasOrderBelow(int floor, order_direction dir) {
+	for (int i = floor-1; i >= 0; --i) {
+		if (hasOrder(floor, (int)dir)) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
 void clearOrder(int floor, order_direction dir) {
 	switch (dir) {
-		case DIR_DOWN:
+		case ORDER_DIR_DOWN:
 			orderArray[0][floor-2] = 0;
 			break;
-		case DIR_UP:
+		case ORDER_DIR_UP:
 			orderArray[1][floor-1] = 0;
 			break;
-		case DIR_BOTH:
+		case ORDER_DIR_BOTH:
 			orderArray[0][floor-2] = 0;
 			orderArray[1][floor-1] = 0;
 			break;

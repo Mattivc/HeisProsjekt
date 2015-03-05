@@ -27,23 +27,23 @@ int idToFloor[10] = {
     1,2,3
 };
 int idToDir[10] = {
-    DIR_BOTH, DIR_BOTH, DIR_BOTH, DIR_BOTH,
-    DIR_UP, DIR_UP, DIR_UP,
-    DIR_DOWN, DIR_DOWN, DIR_DOWN
+    ORDER_DIR_BOTH, ORDER_DIR_BOTH, ORDER_DIR_BOTH, ORDER_DIR_BOTH,
+    ORDER_DIR_UP, ORDER_DIR_UP, ORDER_DIR_UP,
+    ORDER_DIR_DOWN, ORDER_DIR_DOWN, ORDER_DIR_DOWN
 };
 
 int main() {
     // Initialize hardware
-    sm_init();
+    
     if (!elev_init()) {
         printf("Unable to initialize elevator hardware!\n");
         return 1;
     }
     
+    sm_init();
+
     printf("Press STOP button to stop elevator and exit program.\n");
-
     while (1) {
-
         int currentFloot = elev_get_floor_sensor_signal();
         if (currentFloot != -1 && currentFloot != lastFloor) {
             arrivedAtFloor(currentFloot);
@@ -56,11 +56,9 @@ int main() {
                 buttonsStatusArray[i] = 1;
 
                 newOrder(idToFloor[i], idToDir[i]);
-                printf("Button %i was pressed.\n", i);
             }
             if (buttonsStatusArray[i] == 1 && inputStatusArray[i] == 0) {
                 buttonsStatusArray[i] = 0;
-                printf("Button %i was released.\n", i);
             }
         }
 

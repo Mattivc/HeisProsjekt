@@ -9,6 +9,10 @@ void addOrder(int floor, order_direction dir);
 
 int hasOrder(int floor, order_direction dir);
 
+int hasOrderAbove(int floor, order_direction dir);
+
+int hasOrderBelow(int floor, order_direction dir);
+
 void clearOrder(int floor, order_direction dir);
 
 void clearAllOrders();
