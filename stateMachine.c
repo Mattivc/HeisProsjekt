@@ -1,6 +1,7 @@
 #include "stateMachine.h"
 #include "queue.h"
 #include "elev.h"
+#include "hw.h"
 #include "timer.h"
 #include <stdio.h>
 
@@ -16,13 +17,6 @@ static sm_state currentState;
 static enum tag_elev_motor_direction direction;
 static int lastFloor = -1;
 
-void setDirection(elev_motor_direction_t dir) {
-	if (dir != DIRN_STOP) { // We want to remember our previus direction when stopping
-		direction = dir;
-	}
-	elev_set_motor_direction(dir);
-}
-
 void setState(sm_state newState) {
 	printf("Set state: %i\n", newState);
 	switch (newState) {
@@ -31,14 +25,15 @@ void setState(sm_state newState) {
 		case IDLE:
 			break;
 		case MOVING:
+			elev_set_motor_direction(direction);
 			break;
 		case STOP:
+			elev_set_motor_direction(DIRN_STOP);
 			break;
 		case AT_FLOOR:
+			elev_set_motor_direction(DIRN_STOP);
 			clearOrder(lastFloor, ORDER_DIR_BOTH);
-			elev_set_button_lamp(BUTTON_CALL_UP, lastFloor, 0);
-			elev_set_button_lamp(BUTTON_CALL_DOWN, lastFloor, 0);
-			elev_set_button_lamp(BUTTON_COMMAND, lastFloor, 0);
+			disableOrderLamps(lastFloor);
 			elev_set_door_open_lamp(1);
 			startDoorTimer();
 			break;
@@ -46,12 +41,22 @@ void setState(sm_state newState) {
 	currentState = newState;
 }
 
+order_direction moveToOrder(tag_elev_motor_direction dir) {
+	case DIRN_UP:
+		return ORDER_DIR_UP;
+	case DIRN_DOWN:
+		return ORDER_DIR_DOWN;
+	case DIRN_STOP:
+		return ORDER_DIR_BOTH;
+}
+
 void sm_init() {
 	setState(INITIALIZE);
 	if (elev_get_floor_sensor_signal() == 0) {
+		lastFloor = 0;
 		setState(IDLE);
 	} else {
-		setDirection(DIRN_DOWN);
+		elev_set_motor_direction(DIRN_DOWN);
 	}
 }
 
@@ -75,7 +80,7 @@ void newOrder(int floor, order_direction dir) {
 		case MOVING:
 		case STOP:
 		case AT_FLOOR:
-			elev_set_button_lamp((int)dir, floor, 1);
+			//elev_set_button_lamp((int)dir, floor, 1);
 			
 			addOrder(floor, dir);
 			printf("New Order. floor %i direction %i\n", floor, dir);
@@ -90,17 +95,16 @@ void arrivedAtFloor(int floor) {
 	switch (currentState) {
 		case INITIALIZE:
 			if (floor == 0) {
-				setDirection(DIRN_STOP);
+				elev_set_motor_direction(DIRN_STOP);
+				direction = DIRN_UP // We are at the bottom floor, so initialize move direction to up
 				setState(IDLE);
 			}
 			break;
 		case IDLE:
 			break;
 		case MOVING:
-			if (direction == DIRN_UP && hasOrder(floor, ORDER_DIR_UP)) {
-				setDirection(DIRN_STOP);
-				setState(AT_FLOOR);
-			} else if (direction == DIRN_DOWN && hasOrder(floor, ORDER_DIR_DOWN)) {
+			if (hasOrder(floor, moveToOrder(direction)) || // Does this floor has a order in our current direction?
+				hasOrder(floor, moveToOrder(direction*-1)) && !hasOrderInDir(floor, moveToOrder(direction))) { // Does this floor have an order in the opisite direction and no order above us
 				setDirection(DIRN_STOP);
 				setState(AT_FLOOR);
 			}
@@ -121,28 +125,6 @@ void doorTimerDone() {
 			break;
 		case AT_FLOOR:
 			elev_set_door_open_lamp(0);
-
-			if (direction == DIRN_UP) { // We should continue in our current direction if any orders above us.
-				if (hasOrderAbove(lastFloor, ORDER_DIR_BOTH)) {
-					setDirection(DIRN_UP);
-					setState(MOVING);
-				} else if (hasOrderBelow(lastFloor, ORDER_DIR_BOTH)) { // Nothing above us, is there anything below?
-					setDirection(DIRN_DOWN);
-					setState(MOVING);
-				} else {
-					setState(IDLE);
-				}
-			} else {
-				if (hasOrderBelow(lastFloor, ORDER_DIR_BOTH)) {
-					setDirection(DIRN_DOWN);
-					setState(MOVING);
-				} else if (hasOrderAbove(lastFloor, ORDER_DIR_BOTH)) {
-					setDirection(DIRN_UP);
-					setState(MOVING);
-				} else {
-					setState(IDLE);
-				}
-			}
 			break;
 	}
 }

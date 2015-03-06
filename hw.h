@@ -3,4 +3,6 @@
 
 void updateInputStatusArray();
 
+void disableOrderLamps(int floor);
+
 #endif

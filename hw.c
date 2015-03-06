@@ -18,3 +18,9 @@ void updateInputStatusArray(int *statusArray) {
 	statusArray[8] = elev_get_button_signal(BUTTON_CALL_DOWN, 2);
 	statusArray[9] = elev_get_button_signal(BUTTON_CALL_DOWN, 3);
 }
+
+void disableOrderLamps(int floor) {
+	elev_set_button_lamp(BUTTON_CALL_UP, floor, 0);
+	elev_set_button_lamp(BUTTON_CALL_DOWN, floor, 0);
+	elev_set_button_lamp(BUTTON_COMMAND, floor, 0);
+}

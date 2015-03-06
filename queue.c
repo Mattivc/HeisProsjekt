@@ -29,18 +29,26 @@ int hasOrder(int floor, order_direction dir) {
 	}
 }
 
-int hasOrderAbove(int floor, order_direction dir) {
+int hasOrderInDir(int floor, order_direction dir) {
+	if (dir == ORDER_DIR_UP) {
+		return hasOrderAbove(floor)
+	} else {
+		return hasOrderBelow(floor)
+	}
+}
+
+int hasOrderAbove(int floor) {
 	for (int i = floor+1; i < 4; ++i) {
-		if (hasOrder(floor, (int)dir)) {
+		if (hasOrder(floor, ORDER_DIR_BOTH) {
 			return 1;
 		}
 	}
 	return 0;
 }
 
-int hasOrderBelow(int floor, order_direction dir) {
+int hasOrderBelow(int floor) {
 	for (int i = floor-1; i >= 0; --i) {
-		if (hasOrder(floor, (int)dir)) {
+		if (hasOrder(floor, ORDER_DIR_BOTH) {
 			return 1;
 		}
 	}
