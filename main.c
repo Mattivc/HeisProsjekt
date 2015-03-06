@@ -5,9 +5,14 @@
 #include "enums.h"
 #include <stdio.h>
 
-int lastFloor = -1;
+
+//TESTING
+#include "queue.h"
+
+int lastDetectedFloor = -1;
 int buttonsStatusArray[10] = {0};
 int inputStatusArray[10] = {0};
+
 /*
 0 - Command 1
 1 - Command 2
@@ -34,20 +39,20 @@ int idToDir[10] = {
 
 int main() {
     // Initialize hardware
-    
+    /*
     if (!elev_init()) {
         printf("Unable to initialize elevator hardware!\n");
         return 1;
     }
     
-    sm_init();
+    fsm_init();
 
     printf("Press STOP button to stop elevator and exit program.\n");
     while (1) {
         int currentFloot = elev_get_floor_sensor_signal();
-        if (currentFloot != -1 && currentFloot != lastFloor) {
-            arrivedAtFloor(currentFloot);
-            lastFloor = currentFloot;
+        if (currentFloot != -1 && currentFloot != lastDetectedFloor) {
+            fsm_event_arrivedAtFloor(currentFloot);
+            lastDetectedFloor = currentFloot;
         }
 
         updateInputStatusArray(inputStatusArray);
@@ -55,7 +60,7 @@ int main() {
             if (buttonsStatusArray[i] == 0 && inputStatusArray[i] == 1) {
                 buttonsStatusArray[i] = 1;
 
-                newOrder(idToFloor[i], idToDir[i]);
+                fsm_event_newOrder(idToFloor[i], idToDir[i]);
             }
             if (buttonsStatusArray[i] == 1 && inputStatusArray[i] == 0) {
                 buttonsStatusArray[i] = 0;
@@ -63,7 +68,7 @@ int main() {
         }
 
         if (isDoorTimerDone()) {
-            doorTimerDone();
+            fsm_event_doorTimerDone();
             resetDoorTimer();
         }
 
@@ -73,6 +78,9 @@ int main() {
             break;
         }
     }
+    */
+
+    printf("TEST\n");
 
     return 0;
 }

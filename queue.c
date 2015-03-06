@@ -1,9 +1,19 @@
 #include "enums.h"
 
-int orderArray[2][3] = {{0}};
+static int orderArray[2][3] = {{0}};
 
+/*
+	Internal function decleration
+*/
 
-void addOrder(int floor, order_direction dir) {
+static int hasOrderAbove(int floor);
+static int hasOrderBelow(int floor);
+
+/*
+	External functions implementation
+*/
+
+void queue_addOrder(int floor, order_direction dir) {
 	switch (dir) {
 		case ORDER_DIR_DOWN:
 			orderArray[0][floor-2] = 1;
@@ -18,7 +28,7 @@ void addOrder(int floor, order_direction dir) {
 	}
 }
 
-int hasOrder(int floor, order_direction dir) {
+int queue_hasOrder(int floor, order_direction dir) {
 	switch (dir) {
 		case ORDER_DIR_DOWN:
 			return orderArray[0][floor-2];
@@ -29,33 +39,15 @@ int hasOrder(int floor, order_direction dir) {
 	}
 }
 
-int hasOrderInDir(int floor, order_direction dir) {
+int queue_hasOrderInDir(int floor, order_direction dir) {
 	if (dir == ORDER_DIR_UP) {
-		return hasOrderAbove(floor)
+		return hasOrderAbove(floor);
 	} else {
-		return hasOrderBelow(floor)
+		return hasOrderBelow(floor);
 	}
 }
 
-int hasOrderAbove(int floor) {
-	for (int i = floor+1; i < 4; ++i) {
-		if (hasOrder(floor, ORDER_DIR_BOTH) {
-			return 1;
-		}
-	}
-	return 0;
-}
-
-int hasOrderBelow(int floor) {
-	for (int i = floor-1; i >= 0; --i) {
-		if (hasOrder(floor, ORDER_DIR_BOTH) {
-			return 1;
-		}
-	}
-	return 0;
-}
-
-void clearOrder(int floor, order_direction dir) {
+void queue_clearOrder(int floor, order_direction dir) {
 	switch (dir) {
 		case ORDER_DIR_DOWN:
 			orderArray[0][floor-2] = 0;
@@ -70,10 +62,32 @@ void clearOrder(int floor, order_direction dir) {
 	}
 }
 
-void clearAllOrders() {
+void queue_clearAllOrders() {
 	for (int i = 0; i < 2; ++i) {
 		for (int j = 0; j < 3; ++j) {
 			orderArray[i][j] = 0;
 		}
 	}
+}
+
+/*
+	Internal function implementation 
+*/
+
+static int hasOrderAbove(int floor) {
+	for (int i = floor+1; i < 4; ++i) {
+		if (queue_hasOrder(floor, ORDER_DIR_BOTH)) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int hasOrderBelow(int floor) {
+	for (int i = floor-1; i >= 0; --i) {
+		if (queue_hasOrder(floor, ORDER_DIR_BOTH)) {
+			return 1;
+		}
+	}
+	return 0;
 }

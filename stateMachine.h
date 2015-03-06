@@ -4,14 +4,12 @@
 
 #include "enums.h"
 
-void sm_init();
+void fsm_init();
 
-enum order_direction;
+void fsm_event_newOrder(int floor, enum order_direction dir);
 
-void newOrder(int floor, enum order_direction dir);
+void fsm_event_arrivedAtFloor(int floor);
 
-void arrivedAtFloor(int floor);
-
-void doorTimerDone();
+void fsm_event_doorTimerDone();
 
 #endif // #ifndef __INCLUDE_STATE_MACHINE_H__
