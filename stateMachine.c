@@ -6,15 +6,15 @@
 #include <stdio.h>
 
 typedef enum sm_state {
-	INITIALIZE,
-	IDLE,
-	MOVING,
-	STOP,
-	AT_FLOOR
+	INITIALIZE = 0,
+	IDLE = 1,
+	MOVING = 2,
+	STOP = 3,
+	AT_FLOOR = 4
 } sm_state;
 
 static sm_state currentState;
-static enum tag_elev_motor_direction direction;
+static elev_motor_direction_t currentDirection = DIRN_STOP;
 static int lastFloor = -1;
 
 
@@ -22,8 +22,10 @@ static int lastFloor = -1;
 	Internal function decleration
 */
 
-static void setState(sm_state newState);
-static order_direction convertMoveStateToOrderState(enum tag_elev_motor_direction dir);
+void setState(sm_state newState);
+order_direction_t convertMoveStateToOrderState(enum tag_elev_motor_direction dir);
+void printState();
+void printDirection();
 
 /*
 	External functions implementation
@@ -31,6 +33,7 @@ static order_direction convertMoveStateToOrderState(enum tag_elev_motor_directio
 
 void fsm_init() {
 	setState(INITIALIZE);
+	hw_resetAllLamps();
 	if (elev_get_floor_sensor_signal() == 0) {
 		lastFloor = 0;
 		setState(IDLE);
@@ -39,7 +42,7 @@ void fsm_init() {
 	}
 }
 
-void fsm_event_newOrder(int floor, order_direction dir) {
+void fsm_event_newOrder(int floor, order_direction_t dir) {
 	switch (currentState) {
 		case INITIALIZE:
 		case STOP:
@@ -48,10 +51,10 @@ void fsm_event_newOrder(int floor, order_direction dir) {
 		{
 			int relative_dir = floor - lastFloor;
 			if (relative_dir < 0) {
-				direction = DIRN_DOWN;
+				currentDirection = DIRN_DOWN;
 				setState(MOVING);
 			} else if (relative_dir > 0) {
-				direction = DIRN_UP;
+				currentDirection = DIRN_UP;
 				setState(MOVING);
 			} else {
 				setState(AT_FLOOR);
@@ -64,25 +67,27 @@ void fsm_event_newOrder(int floor, order_direction dir) {
 			printf("New Order. floor %i direction %i\n", floor, dir);
 			break;
 	}
+	queue_printState();
 }
 
 void fsm_event_arrivedAtFloor(int floor) {
 	printf("Arrived at floor %i\n", floor);
+	printDirection();
 	lastFloor = floor;
 	elev_set_floor_indicator(floor);
 	switch (currentState) {
 		case INITIALIZE:
 			if (floor == 0) {
 				elev_set_motor_direction(DIRN_STOP);
-				direction = DIRN_UP; // We are at the bottom floor, so initialize move direction to up
+				currentDirection = DIRN_UP; // We are at the bottom floor, so initialize move direction to up
 				setState(IDLE);
 			}
 			break;
 		case IDLE:
 			break;
 		case MOVING:
-			if (queue_hasOrder(floor, convertMoveStateToOrderState(direction)) || // Does this floor has an order in our current direction?
-				(queue_hasOrder(floor, convertMoveStateToOrderState(direction*-1)) && !queue_hasOrderInDir(floor, convertMoveStateToOrderState(direction))) // Does this floor have an order in the opposite direction and no order above us
+			if (queue_hasOrder(floor, convertMoveStateToOrderState(currentDirection)) || // Does this floor has an order in our current direction?
+				(queue_hasOrder(floor, convertMoveStateToOrderState(currentDirection*-1)) && !queue_hasOrderInDir(floor, convertMoveStateToOrderState(currentDirection))) // Does this floor have an order in the opposite direction and no order above us
 				) {
 				setState(AT_FLOOR);
 			}
@@ -113,31 +118,36 @@ void fsm_event_doorTimerDone() {
 	Internal function implementation 
 */
 
-static void setState(sm_state newState) {
-	printf("Set state: %i\n", newState);
+void setState(sm_state newState) {
+	currentState = newState;
+
+	printState();
+	printDirection();
+
 	switch (newState) {
 		case INITIALIZE:
 			break;
 		case IDLE:
 			break;
 		case MOVING:
-			elev_set_motor_direction(direction);
+			elev_set_motor_direction(currentDirection);
 			break;
 		case STOP:
 			elev_set_motor_direction(DIRN_STOP);
 			break;
 		case AT_FLOOR:
+			
 			elev_set_motor_direction(DIRN_STOP);
 			queue_clearOrder(lastFloor, ORDER_DIR_BOTH);
-			disableOrderLamps(lastFloor);
+			hw_disableOrderLamps(lastFloor);
 			elev_set_door_open_lamp(1);
 			startDoorTimer();
 			break;
 	}
-	currentState = newState;
+	
 }
 
-static order_direction convertMoveStateToOrderState(enum tag_elev_motor_direction dir) {
+order_direction_t convertMoveStateToOrderState(elev_motor_direction_t dir) {
 	switch (dir) {
 		case DIRN_UP:
 			return ORDER_DIR_UP;
@@ -146,4 +156,41 @@ static order_direction convertMoveStateToOrderState(enum tag_elev_motor_directio
 		case DIRN_STOP:
 			return ORDER_DIR_BOTH;
 	}
+}
+
+void printState() {
+	printf("New state: ");
+		switch (currentState) {
+		case INITIALIZE:
+			printf("INITIALIZE\n");
+			break;
+		case IDLE:
+			printf("IDLE\n");
+			break;
+		case MOVING:
+			printf("MOVING\n");
+			break;
+		case STOP:
+			printf("STOP\n");
+			break;
+		case AT_FLOOR:
+			printf("AT_FLOOR\n");
+			break;
+	}
+}
+
+void printDirection() {
+	printf("Direction: ");
+	switch (currentDirection) {
+	case DIRN_UP:
+		printf("DIRN_UP\n");
+		break;
+	case DIRN_DOWN:
+		printf("DIRN_DOWN\n");
+		break;
+	case DIRN_STOP:
+		printf("DIRN_STOP\n");
+		break;
+	}
+	
 }

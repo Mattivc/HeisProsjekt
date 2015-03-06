@@ -1,8 +1,10 @@
 #ifndef __INCLUDE_HW_H__
 #define __INCLUDE_HW_H__
 
-void updateInputStatusArray();
+void hw_updateInputStatusArray();
 
-void disableOrderLamps(int floor);
+void hw_disableOrderLamps(int floor);
+
+void hw_resetAllLamps();
 
 #endif

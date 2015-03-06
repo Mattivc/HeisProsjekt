@@ -2,12 +2,7 @@
 #include "elev.h"
 #include "stateMachine.h"
 #include "timer.h"
-#include "enums.h"
 #include <stdio.h>
-
-
-//TESTING
-#include "queue.h"
 
 int lastDetectedFloor = -1;
 int buttonsStatusArray[10] = {0};
@@ -39,23 +34,23 @@ int idToDir[10] = {
 
 int main() {
     // Initialize hardware
-    /*
     if (!elev_init()) {
         printf("Unable to initialize elevator hardware!\n");
         return 1;
     }
-    
-    fsm_init();
 
+    fsm_init();
+    
     printf("Press STOP button to stop elevator and exit program.\n");
     while (1) {
+
         int currentFloot = elev_get_floor_sensor_signal();
         if (currentFloot != -1 && currentFloot != lastDetectedFloor) {
             fsm_event_arrivedAtFloor(currentFloot);
             lastDetectedFloor = currentFloot;
         }
 
-        updateInputStatusArray(inputStatusArray);
+        hw_updateInputStatusArray(inputStatusArray);
         for (int i = 0; i < 10; ++i) {
             if (buttonsStatusArray[i] == 0 && inputStatusArray[i] == 1) {
                 buttonsStatusArray[i] = 1;
@@ -78,9 +73,4 @@ int main() {
             break;
         }
     }
-    */
-
-    printf("TEST\n");
-
-    return 0;
 }

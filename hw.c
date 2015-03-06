@@ -2,7 +2,7 @@
 #include "elev.h"
 
 
-void updateInputStatusArray(int *statusArray) {
+void hw_updateInputStatusArray(int *statusArray) {
 	
 	// Command buttons
 	statusArray[0] = elev_get_button_signal(BUTTON_COMMAND, 0);
@@ -19,8 +19,32 @@ void updateInputStatusArray(int *statusArray) {
 	statusArray[9] = elev_get_button_signal(BUTTON_CALL_DOWN, 3);
 }
 
-void disableOrderLamps(int floor) {
-	elev_set_button_lamp(BUTTON_CALL_UP, floor, 0);
-	elev_set_button_lamp(BUTTON_CALL_DOWN, floor, 0);
+void hw_disableOrderLamps(int floor) {
+	if (floor != 3) {
+		elev_set_button_lamp(BUTTON_CALL_UP, floor, 0);
+	}
+	if (floor != 0) {
+		elev_set_button_lamp(BUTTON_CALL_DOWN, floor, 0);
+	}
+	
 	elev_set_button_lamp(BUTTON_COMMAND, floor, 0);
+}
+
+void hw_resetAllLamps() {
+	// Command buttons
+	elev_set_button_lamp(BUTTON_COMMAND, 0, 0);
+	elev_set_button_lamp(BUTTON_COMMAND, 1, 0);
+	elev_set_button_lamp(BUTTON_COMMAND, 2, 0);
+	elev_set_button_lamp(BUTTON_COMMAND, 3, 0);
+	// Order up 
+	elev_set_button_lamp(BUTTON_CALL_UP, 0, 0);
+	elev_set_button_lamp(BUTTON_CALL_UP, 1, 0);
+	elev_set_button_lamp(BUTTON_CALL_UP, 2, 0);
+	// Order down
+	elev_set_button_lamp(BUTTON_CALL_DOWN, 1, 0);
+	elev_set_button_lamp(BUTTON_CALL_DOWN, 2, 0);
+	elev_set_button_lamp(BUTTON_CALL_DOWN, 3, 0);
+	// Door & stop
+	elev_set_door_open_lamp(0);
+	elev_set_stop_lamp(0);
 }
