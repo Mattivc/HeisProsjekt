@@ -17,20 +17,17 @@ void hw_updateInputStatusArray(int *statusArray) {
 	statusArray[7] = elev_get_button_signal(BUTTON_CALL_DOWN, 1);
 	statusArray[8] = elev_get_button_signal(BUTTON_CALL_DOWN, 2);
 	statusArray[9] = elev_get_button_signal(BUTTON_CALL_DOWN, 3);
+	// Stop
+	statusArray[10] = elev_get_stop_signal();
 }
 
 void hw_disableOrderLamps(int floor) {
-	if (floor != 3) {
-		elev_set_button_lamp(BUTTON_CALL_UP, floor, 0);
-	}
-	if (floor != 0) {
-		elev_set_button_lamp(BUTTON_CALL_DOWN, floor, 0);
-	}
-	
+	if (floor != 3) { elev_set_button_lamp(BUTTON_CALL_UP, floor, 0); }
+	if (floor != 0) { elev_set_button_lamp(BUTTON_CALL_DOWN, floor, 0); }
 	elev_set_button_lamp(BUTTON_COMMAND, floor, 0);
 }
 
-void hw_resetAllLamps() {
+void hw_resetAllOrderLamps() {
 	// Command buttons
 	elev_set_button_lamp(BUTTON_COMMAND, 0, 0);
 	elev_set_button_lamp(BUTTON_COMMAND, 1, 0);
@@ -44,6 +41,11 @@ void hw_resetAllLamps() {
 	elev_set_button_lamp(BUTTON_CALL_DOWN, 1, 0);
 	elev_set_button_lamp(BUTTON_CALL_DOWN, 2, 0);
 	elev_set_button_lamp(BUTTON_CALL_DOWN, 3, 0);
+}
+
+void hw_resetAllLamps() {
+	// Order buttons
+	hw_resetAllOrderLamps();
 	// Door & stop
 	elev_set_door_open_lamp(0);
 	elev_set_stop_lamp(0);

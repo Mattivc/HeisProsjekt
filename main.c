@@ -5,20 +5,21 @@
 #include <stdio.h>
 
 int lastDetectedFloor = -1;
-int buttonsStatusArray[10] = {0};
-int inputStatusArray[10] = {0};
+int buttonsStatusArray[11] = {0};
+int inputStatusArray[11] = {0};
 
 /*
-0 - Command 1
-1 - Command 2
-2 - Command 3
-3 - Command 4
-4 - Floor 1 up
-5 - Floor 2 up
-6 - Floor 3 up
-7 - Floor 2 down
-8 - Floor 3 down
-9 - Floor 4 down 
+0  - Command 1
+1  - Command 2
+2  - Command 3
+3  - Command 4
+4  - Floor 1 up
+5  - Floor 2 up
+6  - Floor 3 up
+7  - Floor 2 down
+8  - Floor 3 down
+9  - Floor 4 down
+10 - Stop
 */
 
 int idToFloor[10] = {
@@ -40,37 +41,42 @@ int main() {
     }
 
     fsm_init();
-    
-    printf("Press STOP button to stop elevator and exit program.\n");
     while (1) {
 
-        int currentFloot = elev_get_floor_sensor_signal();
-        if (currentFloot != -1 && currentFloot != lastDetectedFloor) {
-            fsm_event_arrivedAtFloor(currentFloot);
-            lastDetectedFloor = currentFloot;
+        // Check floor sensor
+        int currentFloor = elev_get_floor_sensor_signal();
+        if (currentFloor != -1 && currentFloor != lastDetectedFloor) {
+            fsm_event_arrivedAtFloor(currentFloor);
+            lastDetectedFloor = currentFloor;
         }
 
         hw_updateInputStatusArray(inputStatusArray);
+
+        // Check order buttons
         for (int i = 0; i < 10; ++i) {
-            if (buttonsStatusArray[i] == 0 && inputStatusArray[i] == 1) {
+            if (inputStatusArray[i] == 1 && buttonsStatusArray[i] == 0) {
                 buttonsStatusArray[i] = 1;
 
                 fsm_event_newOrder(idToFloor[i], idToDir[i]);
-            }
-            if (buttonsStatusArray[i] == 1 && inputStatusArray[i] == 0) {
+            } else if (inputStatusArray[i] == 0 && buttonsStatusArray[i] == 1) {
                 buttonsStatusArray[i] = 0;
             }
         }
 
+        // Check stop button
+        if (inputStatusArray[10] == 1 && buttonsStatusArray[10] == 0) {
+            buttonsStatusArray[10] = 1;
+            fsm_event_stopPressed(currentFloor);
+        } else if (inputStatusArray[10] == 0 && buttonsStatusArray[10] == 1) {
+            buttonsStatusArray[10] = 0;
+            lastDetectedFloor = -1;
+            fsm_event_stopReleased(currentFloor);
+        }
+
+        // Check timer
         if (isDoorTimerDone()) {
             fsm_event_doorTimerDone();
             resetDoorTimer();
-        }
-
-        // Stop elevator and exit program if the stop button is pressed
-        if (elev_get_stop_signal()) {
-            elev_set_motor_direction(DIRN_STOP);
-            break;
         }
     }
 }

@@ -5,6 +5,8 @@ void hw_updateInputStatusArray();
 
 void hw_disableOrderLamps(int floor);
 
+void hw_resetAllOrderLamps();
+
 void hw_resetAllLamps();
 
 #endif

@@ -16,7 +16,7 @@ typedef enum sm_state {
 static sm_state currentState;
 static elev_motor_direction_t currentDirection = DIRN_STOP;
 static int lastFloor = -1;
-
+static int returnedFromStop = 0;
 
 /*
 	Internal function decleration
@@ -50,11 +50,23 @@ void fsm_event_newOrder(int floor, order_direction_t dir) {
 			break;
 		case IDLE:
 		{
+
 			elev_set_button_lamp((int)dir, floor, 1); 
 			queue_addOrder(floor, dir);
 			printf("New Order. floor %i direction %i\n", floor, dir);
 
 			int relative_dir = floor - lastFloor;
+			if (returnedFromStop) { // We have gotten our first order after stopping betwene two floors.
+				if (relative_dir == 0) { // We where asked to return to the floor we came from before we stopped.
+					relative_dir = -(int)currentDirection;
+					lastFloor = lastFloor - (int)currentDirection;
+				}
+				printf("RETURNED FROM STOP DIR %i LAST FLOOR %i\n", relative_dir, lastFloor);
+				//returnedFromStop = 0;
+			} else {
+				
+			}
+
 			printf("Relative dir %i\n", relative_dir);
 			if (relative_dir < 0) {
 				currentDirection = DIRN_DOWN;
@@ -79,7 +91,6 @@ void fsm_event_newOrder(int floor, order_direction_t dir) {
 			
 			break;
 	}
-	queue_printState();
 }
 
 void fsm_event_arrivedAtFloor(int floor) {
@@ -130,6 +141,41 @@ void fsm_event_doorTimerDone() {
 }
 
 
+void fsm_event_stopPressed(int floorSignal) {
+	switch (currentState) {
+		case INITIALIZE:
+			break;
+		case IDLE:
+		case MOVING:
+		case STOP:
+		case AT_FLOOR:
+			if (floorSignal != -1) { elev_set_door_open_lamp(1); }
+			elev_set_stop_lamp(1);
+			setState(STOP);
+			break;
+	}
+
+	
+}
+
+void fsm_event_stopReleased(int floorSignal) {
+	elev_set_stop_lamp(0);
+	elev_set_door_open_lamp(0);
+	switch (currentState) {
+		case INITIALIZE:
+		case IDLE:
+		case MOVING:
+		case AT_FLOOR:
+			break;
+		case STOP:
+			returnedFromStop = 1;
+			setState(IDLE);
+			break;
+	}
+
+	
+}
+
 /*
 	Internal function implementation 
 */
@@ -139,7 +185,6 @@ void setState(sm_state newState) {
 
 	printState();
 	printDirection();
-	queue_printState();
 
 	switch (newState) {
 		case INITIALIZE:
@@ -150,6 +195,12 @@ void setState(sm_state newState) {
 			printf("Inside moving: lastFloor  %i\n", lastFloor);
 			printf("Inside moving: going same  %i\n", queue_hasOrderInDir(lastFloor, convertMoveStateToOrderState(currentDirection)));
 			printf("Inside moving: going opposite  %i\n", queue_hasOrderInDir(lastFloor, convertMoveStateToOrderState(currentDirection*-1)));
+
+			if (returnedFromStop) {
+				elev_set_motor_direction(currentDirection);
+				returnedFromStop = 0;
+				break;
+			}
 
 			if (queue_hasOrderInDir(lastFloor, convertMoveStateToOrderState(currentDirection))) {
 				elev_set_motor_direction(currentDirection);
@@ -163,6 +214,8 @@ void setState(sm_state newState) {
 			break;
 		case STOP:
 			elev_set_motor_direction(DIRN_STOP);
+			queue_clearAllOrders();
+			hw_resetAllOrderLamps();
 			break;
 		case AT_FLOOR:
 			elev_set_motor_direction(DIRN_STOP);

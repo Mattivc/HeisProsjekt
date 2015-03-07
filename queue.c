@@ -27,7 +27,6 @@ static void asertInput(int floor, order_direction_t dir);
 */
 
 void queue_addOrder(int floor, order_direction_t dir) {
-	printf("Add Order: floor %i dir %i\n", floor, dir);
 	asertInput(floor, dir);
 
 	switch (dir) {
@@ -45,7 +44,6 @@ void queue_addOrder(int floor, order_direction_t dir) {
 }
 
 int queue_hasOrder(int floor, order_direction_t dir) {
-	printf("Has Order: floor %i dir %i\n", floor, dir);
 	asertInput(floor, dir);
 
 	switch (dir) {
@@ -61,7 +59,6 @@ int queue_hasOrder(int floor, order_direction_t dir) {
 }
 
 int queue_hasOrderInDir(int floor, order_direction_t dir) {
-	printf("Has Order in dir: floor %i dir %i\n", floor, dir);
 	if (dir == ORDER_DIR_UP) {
 		return hasOrderAbove(floor);
 	} else {
@@ -70,7 +67,6 @@ int queue_hasOrderInDir(int floor, order_direction_t dir) {
 }
 
 void queue_clearOrder(int floor, order_direction_t dir) {
-	printf("Clear Order: floor %i dir %i\n", floor, dir);
 	asertInput(floor, dir);
 
 	switch (dir) {
@@ -88,7 +84,6 @@ void queue_clearOrder(int floor, order_direction_t dir) {
 }
 
 void queue_clearAllOrders() {
-	printf("Clear All Orders\n");
 	for (int i = 0; i < 2; ++i) {
 		for (int j = 0; j < 3; ++j) {
 			orderArray[i][j] = 0;
