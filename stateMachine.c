@@ -24,6 +24,7 @@ static int lastFloor = -1;
 
 void setState(sm_state newState);
 order_direction_t convertMoveStateToOrderState(enum tag_elev_motor_direction dir);
+void reverseDirection();
 void printState();
 void printDirection();
 
@@ -49,7 +50,12 @@ void fsm_event_newOrder(int floor, order_direction_t dir) {
 			break;
 		case IDLE:
 		{
+			elev_set_button_lamp((int)dir, floor, 1); 
+			queue_addOrder(floor, dir);
+			printf("New Order. floor %i direction %i\n", floor, dir);
+
 			int relative_dir = floor - lastFloor;
+			printf("Relative dir %i\n", relative_dir);
 			if (relative_dir < 0) {
 				currentDirection = DIRN_DOWN;
 				setState(MOVING);
@@ -59,22 +65,29 @@ void fsm_event_newOrder(int floor, order_direction_t dir) {
 			} else {
 				setState(AT_FLOOR);
 			}
+			break;
 		}
-		case MOVING:
 		case AT_FLOOR:
-			elev_set_button_lamp((int)dir, floor, 1); 
-			queue_addOrder(floor, dir);
-			printf("New Order. floor %i direction %i\n", floor, dir);
+		case MOVING:
+			if (floor == lastFloor && currentState == AT_FLOOR) {
+				startDoorTimer(); // We got an order for the same floor that we are currently in, so hold the door for a bit longer.
+			} else {
+				elev_set_button_lamp((int)dir, floor, 1); 
+				queue_addOrder(floor, dir);
+				printf("New Order. floor %i direction %i\n", floor, dir);
+			}
+			
 			break;
 	}
 	queue_printState();
 }
 
 void fsm_event_arrivedAtFloor(int floor) {
-	printf("Arrived at floor %i\n", floor);
+	printf("Arrived at floor %i with direction %i\n", floor, currentDirection);
 	printDirection();
 	lastFloor = floor;
 	elev_set_floor_indicator(floor);
+
 	switch (currentState) {
 		case INITIALIZE:
 			if (floor == 0) {
@@ -86,7 +99,10 @@ void fsm_event_arrivedAtFloor(int floor) {
 		case IDLE:
 			break;
 		case MOVING:
-			if (queue_hasOrder(floor, convertMoveStateToOrderState(currentDirection)) || // Does this floor has an order in our current direction?
+			if (floor == 0 || floor == 3) { // We hit a top or bottom floor, so there has to be an order here since we went here
+				reverseDirection();
+				setState(AT_FLOOR);
+			} else if (queue_hasOrder(floor, convertMoveStateToOrderState(currentDirection)) || // Does this floor has an order in our current direction?
 				(queue_hasOrder(floor, convertMoveStateToOrderState(currentDirection*-1)) && !queue_hasOrderInDir(floor, convertMoveStateToOrderState(currentDirection))) // Does this floor have an order in the opposite direction and no order above us
 				) {
 				setState(AT_FLOOR);
@@ -123,6 +139,7 @@ void setState(sm_state newState) {
 
 	printState();
 	printDirection();
+	queue_printState();
 
 	switch (newState) {
 		case INITIALIZE:
@@ -130,13 +147,24 @@ void setState(sm_state newState) {
 		case IDLE:
 			break;
 		case MOVING:
-			elev_set_motor_direction(currentDirection);
+			printf("Inside moving: lastFloor  %i\n", lastFloor);
+			printf("Inside moving: going same  %i\n", queue_hasOrderInDir(lastFloor, convertMoveStateToOrderState(currentDirection)));
+			printf("Inside moving: going opposite  %i\n", queue_hasOrderInDir(lastFloor, convertMoveStateToOrderState(currentDirection*-1)));
+
+			if (queue_hasOrderInDir(lastFloor, convertMoveStateToOrderState(currentDirection))) {
+				elev_set_motor_direction(currentDirection);
+			} else if (queue_hasOrderInDir(lastFloor, convertMoveStateToOrderState(currentDirection*-1))) {
+				reverseDirection();
+				elev_set_motor_direction(currentDirection);
+			} else {
+				setState(IDLE);
+			}
+			
 			break;
 		case STOP:
 			elev_set_motor_direction(DIRN_STOP);
 			break;
 		case AT_FLOOR:
-			
 			elev_set_motor_direction(DIRN_STOP);
 			queue_clearOrder(lastFloor, ORDER_DIR_BOTH);
 			hw_disableOrderLamps(lastFloor);
@@ -155,6 +183,19 @@ order_direction_t convertMoveStateToOrderState(elev_motor_direction_t dir) {
 			return ORDER_DIR_DOWN;
 		case DIRN_STOP:
 			return ORDER_DIR_BOTH;
+	}
+}
+
+void reverseDirection() {
+	switch (currentDirection) {
+	case DIRN_UP:
+		currentDirection = DIRN_DOWN;
+		break;
+	case DIRN_DOWN:
+		currentDirection = DIRN_UP;
+		break;
+	case DIRN_STOP:
+		break;
 	}
 }
 
@@ -194,3 +235,5 @@ void printDirection() {
 	}
 	
 }
+
+

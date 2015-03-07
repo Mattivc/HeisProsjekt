@@ -27,6 +27,7 @@ static void asertInput(int floor, order_direction_t dir);
 */
 
 void queue_addOrder(int floor, order_direction_t dir) {
+	printf("Add Order: floor %i dir %i\n", floor, dir);
 	asertInput(floor, dir);
 
 	switch (dir) {
@@ -38,27 +39,29 @@ void queue_addOrder(int floor, order_direction_t dir) {
 			break;
 		case ORDER_DIR_BOTH:
 			if (floor >= 1) { orderArray[1][floor-1] = 1; } // down
-			if (floor <= 2) { orderArray[0][floor] = 1; } // up
+			if (floor <= 2) { orderArray[0][floor]   = 1; } // up
 			break;
 	}
 }
 
 int queue_hasOrder(int floor, order_direction_t dir) {
+	printf("Has Order: floor %i dir %i\n", floor, dir);
 	asertInput(floor, dir);
 
 	switch (dir) {
 		case ORDER_DIR_DOWN:
-			return orderArray[0][floor-1];
+			return orderArray[1][floor-1];
 		case ORDER_DIR_UP:
-			return orderArray[1][floor];
+			return orderArray[0][floor];
 		case ORDER_DIR_BOTH:
-			return orderArray[0][floor-1] + orderArray[1][floor-1];
+			if      (floor == 0) { return orderArray[0][0]; }
+			else if (floor == 3) { return orderArray[1][2]; }
+			else                 { return orderArray[0][floor] + orderArray[1][floor-1]; }
 	}
 }
 
 int queue_hasOrderInDir(int floor, order_direction_t dir) {
-	asertInput(floor, dir);
-
+	printf("Has Order in dir: floor %i dir %i\n", floor, dir);
 	if (dir == ORDER_DIR_UP) {
 		return hasOrderAbove(floor);
 	} else {
@@ -67,23 +70,25 @@ int queue_hasOrderInDir(int floor, order_direction_t dir) {
 }
 
 void queue_clearOrder(int floor, order_direction_t dir) {
+	printf("Clear Order: floor %i dir %i\n", floor, dir);
 	asertInput(floor, dir);
 
 	switch (dir) {
 		case ORDER_DIR_DOWN:
-			orderArray[0][floor-1] = 0;
+			orderArray[1][floor-1] = 0;
 			break;
 		case ORDER_DIR_UP:
-			orderArray[1][floor] = 0;
+			orderArray[0][floor] = 0;
 			break;
 		case ORDER_DIR_BOTH:
-			orderArray[0][floor-1] = 0;
-			orderArray[1][floor] = 0;
+			if (floor >= 1) { orderArray[1][floor-1] = 0; }
+			if (floor <= 2) { orderArray[0][floor]   = 0; }
 			break;
 	}
 }
 
 void queue_clearAllOrders() {
+	printf("Clear All Orders\n");
 	for (int i = 0; i < 2; ++i) {
 		for (int j = 0; j < 3; ++j) {
 			orderArray[i][j] = 0;
