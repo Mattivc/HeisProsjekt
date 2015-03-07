@@ -1,8 +1,11 @@
+// File storing the orders that are currently recived.
+//
+// 2015, Matias Christensen & Mikael Kvalvær
+
 #include "queue.h"
 #include <assert.h>
-#include <stdio.h>
 
-
+// Array containing the order status of all floors and directions
 static int orderArray[2][3] = {{0}};
 /*
 	[0][0] - floor 0 up
@@ -14,17 +17,13 @@ static int orderArray[2][3] = {{0}};
 */
 
 
-/*
-	Internal function decleration
-*/
+// *** Internal function decleration ***
 
 static int hasOrderAbove(int floor);
 static int hasOrderBelow(int floor);
 static void asertInput(int floor, order_direction_t dir);
 
-/*
-	External functions implementation
-*/
+// ***External functions implementation ***
 
 void queue_addOrder(int floor, order_direction_t dir) {
 	asertInput(floor, dir);
@@ -37,8 +36,8 @@ void queue_addOrder(int floor, order_direction_t dir) {
 			orderArray[0][floor] = 1;
 			break;
 		case ORDER_DIR_BOTH:
-			if (floor >= 1) { orderArray[1][floor-1] = 1; } // down
-			if (floor <= 2) { orderArray[0][floor]   = 1; } // up
+			if (floor >= 1) { orderArray[1][floor-1] = 1; }
+			if (floor <= 2) { orderArray[0][floor]   = 1; }
 			break;
 	}
 }
@@ -91,18 +90,7 @@ void queue_clearAllOrders() {
 	}
 }
 
-void queue_printState() {
-	printf("[0][0] - floor 0 up   = %i\n", orderArray[0][0]);
-	printf("[0][1] - floor 1 up   = %i\n", orderArray[0][1]);
-	printf("[0][2] - floor 2 up   = %i\n", orderArray[0][2]);
-	printf("[1][0] - floor 1 down = %i\n", orderArray[1][0]);
-	printf("[1][1] - floor 2 down = %i\n", orderArray[1][1]);
-	printf("[1][2] - floor 3 down = %i\n", orderArray[1][2]);
-}
-
-/*
-	Internal function implementation 
-*/
+// *** Internal function implementation ***
 
 static int hasOrderAbove(int floor) {
 	for (int i = floor+1; i < 4; ++i) {

@@ -1,5 +1,8 @@
+// Timer functions
+//
+// 2015, Matias Christensen & Mikael Kvalvær
+
 #include <time.h>
-#include <stdio.h>
 
 #define time_length 3
 
@@ -8,13 +11,13 @@ time_t currentTime;
 
 int isSet = 0;
 
-void startDoorTimer() {
+void timer_start() {
 	startTime = time(0);
 	isSet = 1;
 }
 
-int isDoorTimerDone() {
-	if (isSet == 0) {
+int timer_isDone() {
+	if (!isSet) {
 		return 0;
 	} else {
 		currentTime = time(0);
@@ -22,6 +25,6 @@ int isDoorTimerDone() {
 	}
 }
 
-void resetDoorTimer() {
+void timer_reset() {
 	isSet = 0;
 }

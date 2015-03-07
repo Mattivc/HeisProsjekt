@@ -1,3 +1,13 @@
+/*
+************************************************
+*****             Heisprosjekt             *****
+*****  TTK4235 - Tilpassede datasystemer   *****
+*****             Spring - 2015            *****
+*****                                      *****
+*****  Matias Christensen & Mikael Kvalvær *****
+************************************************
+*/
+
 #include "hw.h"
 #include "elev.h"
 #include "stateMachine.h"
@@ -7,26 +17,28 @@
 int lastDetectedFloor = -1;
 int buttonsStatusArray[11] = {0};
 int inputStatusArray[11] = {0};
-
-/*
-0  - Command 1
-1  - Command 2
-2  - Command 3
-3  - Command 4
-4  - Floor 1 up
-5  - Floor 2 up
-6  - Floor 3 up
-7  - Floor 2 down
-8  - Floor 3 down
-9  - Floor 4 down
-10 - Stop
+/* Index - Button
+    [0]  - Command 1
+    [1]  - Command 2
+    [2]  - Command 3
+    [3]  - Command 4
+    [4]  - Floor 1 up
+    [5]  - Floor 2 up
+    [6]  - Floor 3 up
+    [7]  - Floor 2 down
+    [8]  - Floor 3 down
+    [9]  - Floor 4 down
+    [10] - Stop
 */
 
+// Array for converting button index to floor
 int idToFloor[10] = {
     0,1,2,3,
     0,1,2,
     1,2,3
 };
+
+// Array for converting button index to direction
 int idToDir[10] = {
     ORDER_DIR_BOTH, ORDER_DIR_BOTH, ORDER_DIR_BOTH, ORDER_DIR_BOTH,
     ORDER_DIR_UP, ORDER_DIR_UP, ORDER_DIR_UP,
@@ -41,8 +53,9 @@ int main() {
     }
 
     fsm_init();
+    printf("Elevator controller running.\n");
+    
     while (1) {
-
         // Check floor sensor
         int currentFloor = elev_get_floor_sensor_signal();
         if (currentFloor != -1 && currentFloor != lastDetectedFloor) {
@@ -74,9 +87,9 @@ int main() {
         }
 
         // Check timer
-        if (isDoorTimerDone()) {
+        if (timer_isDone()) {
             fsm_event_doorTimerDone();
-            resetDoorTimer();
+            timer_reset();
         }
     }
 }

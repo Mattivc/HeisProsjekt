@@ -1,36 +1,33 @@
+// The state machine controlling the logic of the elevator system.
+//
+// 2015, Matias Christensen & Mikael Kvalvær
+
 #include "stateMachine.h"
 #include "queue.h"
 #include "elev.h"
 #include "hw.h"
 #include "timer.h"
-#include <stdio.h>
 
-typedef enum sm_state {
+typedef enum tag_fsm_state {
 	INITIALIZE = 0,
-	IDLE = 1,
-	MOVING = 2,
-	STOP = 3,
-	AT_FLOOR = 4
-} sm_state;
+	IDLE       = 1,
+	MOVING     = 2,
+	STOP       = 3,
+	AT_FLOOR   = 4
+} fsm_state_t;
 
-static sm_state currentState;
+static fsm_state_t currentState;
 static elev_motor_direction_t currentDirection = DIRN_STOP;
 static int lastFloor = -1;
 static int returnedFromStop = 0;
 
-/*
-	Internal function decleration
-*/
+// *** Internal function decleration ***
 
-void setState(sm_state newState);
+void setState(fsm_state_t newState);
 order_direction_t convertMoveStateToOrderState(enum tag_elev_motor_direction dir);
 void reverseDirection();
-void printState();
-void printDirection();
 
-/*
-	External functions implementation
-*/
+// *** External functions implementation ***
 
 void fsm_init() {
 	setState(INITIALIZE);
@@ -50,10 +47,8 @@ void fsm_event_newOrder(int floor, order_direction_t dir) {
 			break;
 		case IDLE:
 		{
-
 			elev_set_button_lamp((int)dir, floor, 1); 
 			queue_addOrder(floor, dir);
-			printf("New Order. floor %i direction %i\n", floor, dir);
 
 			int relative_dir = floor - lastFloor;
 			if (returnedFromStop) { // We have gotten our first order after stopping betwene two floors.
@@ -61,13 +56,8 @@ void fsm_event_newOrder(int floor, order_direction_t dir) {
 					relative_dir = -(int)currentDirection;
 					lastFloor = lastFloor - (int)currentDirection;
 				}
-				printf("RETURNED FROM STOP DIR %i LAST FLOOR %i\n", relative_dir, lastFloor);
-				//returnedFromStop = 0;
-			} else {
-				
 			}
 
-			printf("Relative dir %i\n", relative_dir);
 			if (relative_dir < 0) {
 				currentDirection = DIRN_DOWN;
 				setState(MOVING);
@@ -82,20 +72,16 @@ void fsm_event_newOrder(int floor, order_direction_t dir) {
 		case AT_FLOOR:
 		case MOVING:
 			if (floor == lastFloor && currentState == AT_FLOOR) {
-				startDoorTimer(); // We got an order for the same floor that we are currently in, so hold the door for a bit longer.
+				timer_start(); // We got an order for the same floor that we are currently in, so hold the door for a bit longer.
 			} else {
 				elev_set_button_lamp((int)dir, floor, 1); 
 				queue_addOrder(floor, dir);
-				printf("New Order. floor %i direction %i\n", floor, dir);
-			}
-			
+			}	
 			break;
 	}
 }
 
 void fsm_event_arrivedAtFloor(int floor) {
-	printf("Arrived at floor %i with direction %i\n", floor, currentDirection);
-	printDirection();
 	lastFloor = floor;
 	elev_set_floor_indicator(floor);
 
@@ -154,11 +140,9 @@ void fsm_event_stopPressed(int floorSignal) {
 			setState(STOP);
 			break;
 	}
-
-	
 }
 
-void fsm_event_stopReleased(int floorSignal) {
+void fsm_event_stopReleased() {
 	elev_set_stop_lamp(0);
 	elev_set_door_open_lamp(0);
 	switch (currentState) {
@@ -172,19 +156,12 @@ void fsm_event_stopReleased(int floorSignal) {
 			setState(IDLE);
 			break;
 	}
-
-	
 }
 
-/*
-	Internal function implementation 
-*/
+// *** Internal function implementation ***
 
-void setState(sm_state newState) {
+void setState(fsm_state_t newState) {
 	currentState = newState;
-
-	printState();
-	printDirection();
 
 	switch (newState) {
 		case INITIALIZE:
@@ -192,10 +169,6 @@ void setState(sm_state newState) {
 		case IDLE:
 			break;
 		case MOVING:
-			printf("Inside moving: lastFloor  %i\n", lastFloor);
-			printf("Inside moving: going same  %i\n", queue_hasOrderInDir(lastFloor, convertMoveStateToOrderState(currentDirection)));
-			printf("Inside moving: going opposite  %i\n", queue_hasOrderInDir(lastFloor, convertMoveStateToOrderState(currentDirection*-1)));
-
 			if (returnedFromStop) {
 				elev_set_motor_direction(currentDirection);
 				returnedFromStop = 0;
@@ -220,9 +193,9 @@ void setState(sm_state newState) {
 		case AT_FLOOR:
 			elev_set_motor_direction(DIRN_STOP);
 			queue_clearOrder(lastFloor, ORDER_DIR_BOTH);
-			hw_disableOrderLamps(lastFloor);
+			hw_resetOrderLamps(lastFloor);
 			elev_set_door_open_lamp(1);
-			startDoorTimer();
+			timer_start();
 			break;
 	}
 	
@@ -251,42 +224,3 @@ void reverseDirection() {
 		break;
 	}
 }
-
-void printState() {
-	printf("New state: ");
-		switch (currentState) {
-		case INITIALIZE:
-			printf("INITIALIZE\n");
-			break;
-		case IDLE:
-			printf("IDLE\n");
-			break;
-		case MOVING:
-			printf("MOVING\n");
-			break;
-		case STOP:
-			printf("STOP\n");
-			break;
-		case AT_FLOOR:
-			printf("AT_FLOOR\n");
-			break;
-	}
-}
-
-void printDirection() {
-	printf("Direction: ");
-	switch (currentDirection) {
-	case DIRN_UP:
-		printf("DIRN_UP\n");
-		break;
-	case DIRN_DOWN:
-		printf("DIRN_DOWN\n");
-		break;
-	case DIRN_STOP:
-		printf("DIRN_STOP\n");
-		break;
-	}
-	
-}
-
-

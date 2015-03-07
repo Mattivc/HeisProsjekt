@@ -1,9 +1,11 @@
+// Wrapper for the elev.c file, providing additional functionality.
+//
+// 2015, Matias Christensen & Mikael Kvalvær
+
 #include "hw.h"
 #include "elev.h"
 
-
 void hw_updateInputStatusArray(int *statusArray) {
-	
 	// Command buttons
 	statusArray[0] = elev_get_button_signal(BUTTON_COMMAND, 0);
 	statusArray[1] = elev_get_button_signal(BUTTON_COMMAND, 1);
@@ -21,7 +23,7 @@ void hw_updateInputStatusArray(int *statusArray) {
 	statusArray[10] = elev_get_stop_signal();
 }
 
-void hw_disableOrderLamps(int floor) {
+void hw_resetOrderLamps(int floor) {
 	if (floor != 3) { elev_set_button_lamp(BUTTON_CALL_UP, floor, 0); }
 	if (floor != 0) { elev_set_button_lamp(BUTTON_CALL_DOWN, floor, 0); }
 	elev_set_button_lamp(BUTTON_COMMAND, floor, 0);
